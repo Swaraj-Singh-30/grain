@@ -77,7 +77,7 @@ inline Add8Result add8(const Byte& A, const Byte& B) {
     return result;
 }
 
-// D-flip flops
+// D-Latch and flip flops
 class DLatch {
     bool q = false;
 
@@ -90,6 +90,12 @@ public:
 };
 
 
-
-
+class DFlipFlop {
+    bool q = false;
+public:
+    void tick(bool d){
+        q = d;
+    }
+    bool output() const { return q; }
+};
 
