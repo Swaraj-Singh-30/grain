@@ -99,3 +99,41 @@ public:
     bool output() const { return q; }
 };
 
+// MUX & DEMUX
+inline bool MUX2(bool a, bool b, bool sel){
+    return OR(
+        AND(NOT(sel), a),
+        AND(sel, b)
+    );
+}
+
+// Y = S₁'S₀'I₀ + S₁'S₀I₁ + S₁S₀'I₂ + S₁S₀I₃
+inline bool MUX4(
+    bool a,
+    bool b,
+    bool c,
+    bool d,
+    bool s1,
+    bool s0
+){
+    bool upper = MUX2(a, b, s0);
+    bool lower = MUX2(c, d, s0);
+
+    return MUX2(upper, lower, s1);
+}
+
+
+inline bool MUX8(
+    bool a,bool b,bool c,bool d,
+    bool e,bool f,bool g,bool h,
+    bool s2,bool s1,bool s0
+){
+    return MUX2(
+        MUX4(a,b,c,d,s1,s0),
+        MUX4(e,f,g,h,s1,s0),
+        s2
+    );
+}
+
+// Register
+

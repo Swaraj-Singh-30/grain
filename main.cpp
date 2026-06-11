@@ -5,18 +5,18 @@
 using namespace std;
 enum class Signal { LOW = 0, HIGH = 1 };
 
-class Wire {
-public:
-    Signal state = Signal::LOW;
+// class Wire {
+// public:
+//     Signal state = Signal::LOW;
 
-    void set(Signal s) {
-        state = s;
-    }
+//     void set(Signal s) {
+//         state = s;
+//     }
 
-    Signal read() const {
-        return state;
-    }
-};
+//     Signal read() const {
+//         return state;
+//     }
+// };
 
 int main() {
     // Wire w;

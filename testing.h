@@ -15,6 +15,16 @@ inline int byteToInt(const Byte& b) {
     return value;
 }
 
+inline Byte intToByte(int value) {
+    Byte b{};
+
+    for (int i = 0; i < 8; ++i) {
+        b[i] = (value >> i) & 1;
+    }
+
+    return b;
+}
+
 inline void runGateTests() {
 
     // NAND
@@ -120,40 +130,78 @@ inline void runFullAdderTests() {
 
 inline void runAdd8Tests() {
 
-    // 5 + 1 = 6
     {
-        Byte A = {1,0,1,0,0,0,0,0};
-        Byte B = {1,0,0,0,0,0,0,0};
+        Byte A = intToByte(5);
+        Byte B = intToByte(1);
 
-        auto r = add8(A,B);
+        auto r = add8(A, B);
 
         assert(byteToInt(r.sum) == 6);
         assert(r.carry_out == 0);
     }
 
-    // 10 + 20 = 30
     {
-        Byte A = {0,1,0,1,0,0,0,0}; // 10
-        Byte B = {0,0,1,0,1,0,0,0}; // 20
+        Byte A = intToByte(10);
+        Byte B = intToByte(20);
 
-        auto r = add8(A,B);
+        auto r = add8(A, B);
 
         assert(byteToInt(r.sum) == 30);
         assert(r.carry_out == 0);
     }
 
-    // 255 + 1 = overflow
     {
-        Byte A = {1,1,1,1,1,1,1,1};
-        Byte B = {1,0,0,0,0,0,0,0};
+        Byte A = intToByte(255);
+        Byte B = intToByte(1);
 
-        auto r = add8(A,B);
+        auto r = add8(A, B);
 
         assert(byteToInt(r.sum) == 0);
         assert(r.carry_out == 1);
     }
 
+    // Exhaustive-ish verification
+    for (int a = 0; a < 256; ++a) {
+        for (int b = 0; b < 256; ++b) {
+
+            auto r = add8(intToByte(a), intToByte(b));
+
+            int expected = a + b;
+
+            assert(byteToInt(r.sum) == (expected & 0xFF));
+            assert(r.carry_out == (expected > 255));
+        }
+    }
+
     std::cout << "[PASS] Add8 tests\n";
+}
+
+inline void runMUXTests() {
+
+    // MUX2
+    assert(MUX2(0,1,0) == 0);
+    assert(MUX2(0,1,1) == 1);
+
+    assert(MUX2(1,0,0) == 1);
+    assert(MUX2(1,0,1) == 0);
+
+    // MUX4
+    assert(MUX4(1,0,0,0,0,0) == 1); // a
+    assert(MUX4(0,1,0,0,0,1) == 1); // b
+    assert(MUX4(0,0,1,0,1,0) == 1); // c
+    assert(MUX4(0,0,0,1,1,1) == 1); // d
+
+    // MUX8
+    assert(MUX8(1,0,0,0,0,0,0,0,0,0,0) == 1); // a
+    assert(MUX8(0,1,0,0,0,0,0,0,0,0,1) == 1); // b
+    assert(MUX8(0,0,1,0,0,0,0,0,0,1,0) == 1); // c
+    assert(MUX8(0,0,0,1,0,0,0,0,0,1,1) == 1); // d
+    assert(MUX8(0,0,0,0,1,0,0,0,1,0,0) == 1); // e
+    assert(MUX8(0,0,0,0,0,1,0,0,1,0,1) == 1); // f
+    assert(MUX8(0,0,0,0,0,0,1,0,1,1,0) == 1); // g
+    assert(MUX8(0,0,0,0,0,0,0,1,1,1,1) == 1); // h
+
+    std::cout << "[PASS] MUX tests\n";
 }
 
 inline void runDLatchTests() {
@@ -165,7 +213,6 @@ inline void runDLatchTests() {
     latch.tick(true, true);
     assert(latch.output() == 1);
 
-    // should hold value
     latch.tick(false, false);
     assert(latch.output() == 1);
 
@@ -199,6 +246,7 @@ inline void runAllTests() {
     runHalfAdderTests();
     runFullAdderTests();
     runAdd8Tests();
+    runMUXTests();
     runDLatchTests();
     runDFlipFlopTests();
 
