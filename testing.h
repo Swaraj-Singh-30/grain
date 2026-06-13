@@ -223,21 +223,59 @@ inline void runDLatchTests() {
 }
 
 inline void runDFlipFlopTests() {
-
     DFlipFlop ff;
 
     assert(ff.output() == 0);
 
-    ff.tick(true);
+    ff.setInput(true);
+    ff.commit();
     assert(ff.output() == 1);
 
-    ff.tick(false);
+    ff.setInput(false);
+    ff.commit();
     assert(ff.output() == 0);
 
-    ff.tick(true);
+    ff.setInput(true);
+    ff.commit();
     assert(ff.output() == 1);
 
     std::cout << "[PASS] DFlipFlop tests\n";
+}
+
+inline void runRegister8Tests() {
+
+    Register8 reg;
+
+    // initial state should be 0
+    Byte out = reg.output();
+    for (int i = 0; i < 8; ++i)
+        assert(out[i] == 0);
+
+    // 1st value
+    Byte a = intToByte(0b10101010);
+    reg.setInput(true, a);
+    reg.commit();
+
+    out = reg.output();
+    assert(byteToInt(out) == 0b10101010);
+
+    // 2nd value
+    Byte b = intToByte(0b01010101);
+    reg.setInput(true, b);
+    reg.commit();
+
+    out = reg.output();
+    assert(byteToInt(out) == 0b01010101);
+
+    // test HOLD (load = false)
+    Byte c = intToByte(0b11111111);
+    reg.setInput(false, c);
+    reg.commit();
+
+    out = reg.output();
+    assert(byteToInt(out) == 0b01010101); // should NOT change
+
+    std::cout << "[PASS] Register8 tests\n";
 }
 
 inline void runAllTests() {
@@ -249,6 +287,7 @@ inline void runAllTests() {
     runMUXTests();
     runDLatchTests();
     runDFlipFlopTests();
+    runRegister8Tests();
 
     std::cout << "\n=== ALL TESTS PASSED ===\n";
 }

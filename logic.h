@@ -92,11 +92,20 @@ public:
 
 class DFlipFlop {
     bool q = false;
+    bool next_q = false;
+
 public:
-    void tick(bool d){
-        q = d;
+    void setInput(bool d) {
+        next_q = d;
     }
-    bool output() const { return q; }
+
+    void commit() {
+        q = next_q;
+    }
+
+    bool output() const {
+        return q;
+    }
 };
 
 // MUX & DEMUX
@@ -134,6 +143,32 @@ inline bool MUX8(
         s2
     );
 }
-
 // Register
+class Register8 {
+    DFlipFlop bits[8];
+    Byte d; // input to flip-flops
 
+public:
+    void setInput(bool load, const Byte& input) {
+        for (int i = 0; i < 8; ++i) {
+            // hardware: MUX chooses what goes into D
+            d[i] = load ? input[i] : bits[i].output();
+        }
+    }
+    void commit() {
+        for (int i = 0; i < 8; ++i) {
+            bits[i].setInput(d[i]); // D input
+        }
+
+        for (int i = 0; i < 8; ++i) {
+            bits[i].commit(); // clock edge
+        }
+    }
+
+    Byte output() const {
+        Byte out{};
+        for (int i = 0; i < 8; ++i)
+            out[i] = bits[i].output();
+        return out;
+    }
+};
