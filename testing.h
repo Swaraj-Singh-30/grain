@@ -4,26 +4,6 @@
 #include <iostream>
 #include "logic.h"
 
-inline int byteToInt(const Byte& b) {
-    int value = 0;
-
-    for (int i = 0; i < 8; ++i) {
-        if (b[i])
-            value |= (1 << i);
-    }
-
-    return value;
-}
-
-inline Byte intToByte(int value) {
-    Byte b{};
-
-    for (int i = 0; i < 8; ++i) {
-        b[i] = (value >> i) & 1;
-    }
-
-    return b;
-}
 
 inline void runGateTests() {
 
@@ -137,7 +117,7 @@ inline void runAdd8Tests() {
         auto r = add8(A, B);
 
         assert(byteToInt(r.sum) == 6);
-        assert(r.carry_out == 0);
+        assert(r.carryOut == 0);
     }
 
     {
@@ -147,7 +127,7 @@ inline void runAdd8Tests() {
         auto r = add8(A, B);
 
         assert(byteToInt(r.sum) == 30);
-        assert(r.carry_out == 0);
+        assert(r.carryOut == 0);
     }
 
     {
@@ -157,7 +137,7 @@ inline void runAdd8Tests() {
         auto r = add8(A, B);
 
         assert(byteToInt(r.sum) == 0);
-        assert(r.carry_out == 1);
+        assert(r.carryOut == 1);
     }
 
     // Exhaustive-ish verification
@@ -169,7 +149,7 @@ inline void runAdd8Tests() {
             int expected = a + b;
 
             assert(byteToInt(r.sum) == (expected & 0xFF));
-            assert(r.carry_out == (expected > 255));
+            assert(r.carryOut == (expected > 255));
         }
     }
 
@@ -228,6 +208,7 @@ inline void runDFlipFlopTests() {
     assert(ff.output() == 0);
 
     ff.setInput(true);
+    assert(ff.output() == 0);
     ff.commit();
     assert(ff.output() == 1);
 
@@ -278,6 +259,48 @@ inline void runRegister8Tests() {
     std::cout << "[PASS] Register8 tests\n";
 }
 
+inline void runPCTests() {
+
+    ProgramCounter pc;
+
+    // initial state = 0
+    assert(byteToInt(pc.output()) == 0);
+
+    // increment
+    pc.tick(ProgramCounter::Mode::Increment);
+    assert(byteToInt(pc.output()) == 1);
+
+    pc.tick(ProgramCounter::Mode::Increment);
+    assert(byteToInt(pc.output()) == 2);
+
+    // jump
+    pc.tick(
+        ProgramCounter::Mode::Load,
+        intToByte(100)
+    );
+    assert(byteToInt(pc.output()) == 100);
+
+    // continue incrementing
+    pc.tick(ProgramCounter::Mode::Increment);
+    assert(byteToInt(pc.output()) == 101);
+
+    //hold test
+    pc.tick(ProgramCounter::Mode::Hold);
+    assert(byteToInt(pc.output()) == 101);
+
+    //overflow test
+    pc.tick(
+    ProgramCounter::Mode::Load,
+    intToByte(255)
+    );
+    assert(byteToInt(pc.output()) == 255);
+
+    pc.tick(ProgramCounter::Mode::Increment);
+    assert(byteToInt(pc.output()) == 0);
+
+    std::cout << "[PASS] PC tests\n";
+}
+
 inline void runAllTests() {
 
     runGateTests();
@@ -288,6 +311,7 @@ inline void runAllTests() {
     runDLatchTests();
     runDFlipFlopTests();
     runRegister8Tests();
+    runPCTests();
 
     std::cout << "\n=== ALL TESTS PASSED ===\n";
 }
